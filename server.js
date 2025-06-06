@@ -7,15 +7,15 @@ const { MongoClient, ObjectId } = require('mongodb'); // Import MongoClient and 
 
 // Create Express application
 const app = express();
-const PORT = process.env.PORT || 3001; // Port for the server to run on (3001 or from environment variable)
+// Use process.env.PORT for Render deployment, fallback to 3001 for local development
+const PORT = process.env.PORT || 3001; 
 
 // --- MongoDB Connection Setup ---
-// Replace this with your actual MongoDB connection string (from MongoDB Atlas).
-// The direct 'mongodb://' format is used here to avoid DNS lookup issues
-// that can occur with 'mongodb+srv://' in some deployment environments (like Render.com).
-// Ensure to replace 'Tamizh@4596' with your actual database user password.
+// This MONGODB_URI is now updated to directly include the URL-encoded password.
+// This ensures consistency between your local code and the environment variable,
+// reducing potential parsing issues.
 // The correct cluster address is 'tharshan.ix4qfl9.mongodb.net'.
-const MONGODB_URI = 'mongodb://Tamizh:Tamizh%404596@tharshan-shard-00-00.ix4qfl9.mongodb.net:27017,tharshan-shard-00-01.ix4qfl9.mongodb.net:27017,tharshan-shard-00-02.ix4qfl9.mongodb.net:27017/bigbasket_clone?authSource=admin&replicaSet=THARSHAN-shard-0'
+const MONGODB_URI = 'mongodb://Tamizh:Tamizh%404596@tharshan-shard-00-00.ix4qfl9.mongodb.net:27017,tharshan-shard-00-01.ix4qfl9.mongodb.net:27017,tharshan-shard-00-02.ix4qfl9.mongodb.net:27017/bigbasket_clone?authSource=admin&replicaSet=THARSHAN-shard-0';
 const DB_NAME = 'bigbasket_clone'; // Name of your database
 const COLLECTION_NAME = 'products'; // Name of your collection for products
 
