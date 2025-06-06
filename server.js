@@ -1,100 +1,97 @@
 // server.js - Simple Node.js Express Backend Server (with MongoDB)
 
-// தேவையான தொகுதிகளை (modules) இறக்குமதி செய்யவும்
+// Import necessary modules
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ObjectId } = require('mongodb'); // mongodb டிரைவரிலிருந்து MongoClient மற்றும் ObjectId ஐ இறக்குமதி செய்யவும்
+const { MongoClient, ObjectId } = require('mongodb'); // Import MongoClient and ObjectId from mongodb driver
 
-// Express அப்ளிகேஷனை உருவாக்கவும்
+// Create Express application
 const app = express();
-const PORT = process.env.PORT || 3001; // சர்வர் இயங்கும் போர்ட் (போர்ட் 3001 அல்லது சுற்றுச்சூழல் மாறியிலிருந்து)
+const PORT = process.env.PORT || 3001; // Port for the server to run on (3001 or from environment variable)
 
-// --- MongoDB இணைப்பு அமைப்பு ---
-// 'mongodb://localhost:27017' என்பதை உங்கள் MongoDB இணைப்பு சரத்துடன் மாற்றவும் (கிளவுட் அல்லது உள்ளூர்)
-// நீங்கள் MongoDB Atlas (கிளவுட்) பயன்படுத்தினால், உங்கள் இணைப்பு சரத்தை இங்கே ஒட்டவும்.
-// <db_password> என்பதற்குப் பதிலாக உங்கள் உண்மையான கடவுச்சொல்லை (Tamizh@4596) உள்ளிடவும்.
-// கவனத்திற்கு: ENOTFOUND பிழையைத் தீர்க்க, mongodb+srv க்கு பதிலாக நேரடி ஹோஸ்ட்நேம்கள் கொண்ட
-// mongodb:// Connection String ஐப் பயன்படுத்துகிறோம்.
-// உங்கள் MongoDB Atlas இல் "Connect with the MongoDB Shell" பகுதியில் இருந்து
-// உங்கள் ஹோஸ்ட்நேம்கள் (3 ஹோஸ்ட்நேம்கள், ஒவ்வொருக்கும் :27017) மற்றும் replicaSet பெயரைப் பெறவும்.
-// சரியான கிளஸ்டர் முகவரி ix4qfl9.mongodb.net ஆகும்.
-const MONGODB_URI = 'mongodb://Tamizh:Tamizh@4596@tharshan-shard-00-00.ix4qfl9.mongodb.net:27017,tharshan-shard-00-01.ix4qfl9.mongodb.net:27017,tharshan-shard-00-02.ix4qfl9.mongodb.net:27017/bigbasket_clone?authSource=admin&replicaSet=THARSHAN-shard-0'; // <--- இந்த வரியை நீங்கள் புதுப்பிக்க வேண்டும்!
-const DB_NAME = 'bigbasket_clone'; // உங்கள் தரவுத்தளத்தின் பெயர்
-const COLLECTION_NAME = 'products'; // தயாரிப்புகளுக்கான உங்கள் கலெக்ஷனின் பெயர்
+// --- MongoDB Connection Setup ---
+// Replace this with your actual MongoDB connection string (from MongoDB Atlas).
+// The direct 'mongodb://' format is used here to avoid DNS lookup issues
+// that can occur with 'mongodb+srv://' in some deployment environments (like Render.com).
+// Ensure to replace 'Tamizh@4596' with your actual database user password.
+// The correct cluster address is 'tharshan.ix4qfl9.mongodb.net'.
+const MONGODB_URI = 'mongodb://Tamizh:Tamizh@4596@tharshan-shard-00-00.ix4qfl9.mongodb.net:27017,tharshan-shard-00-01.ix4qfl9.mongodb.net:27017,tharshan-shard-00-02.ix4qfl9.mongodb.net:27017/bigbasket_clone?authSource=admin&replicaSet=THARSHAN-shard-0';
+const DB_NAME = 'bigbasket_clone'; // Name of your database
+const COLLECTION_NAME = 'products'; // Name of your collection for products
 
-let db; // தரவுத்தள இணைப்பைப் பிடிக்கும் மாறி
+let db; // Variable to hold the database connection
 
-// MongoDB உடன் இணைக்க ஒரு செயல்பாடு
+// Function to connect to MongoDB
 async function connectToMongoDB() {
     try {
         const client = new MongoClient(MONGODB_URI);
-        await client.connect(); // MongoDB சர்வர் உடன் இணைக்கவும்
-        db = client.db(DB_NAME); // தரவுத்தள இன்ஸ்டன்ஸ் ஐப் பெறவும்
-        console.log(`MongoDB உடன் வெற்றிகரமாக இணைக்கப்பட்டது: ${MONGODB_URI}`);
-        console.log(`தரவுத்தளம் பயன்படுத்தப்படுகிறது: ${DB_NAME}`);
+        await client.connect(); // Connect to the MongoDB server
+        db = client.db(DB_NAME); // Get the database instance
+        console.log(`Successfully connected to MongoDB: ${MONGODB_URI}`);
+        console.log(`Using database: ${DB_NAME}`);
     } catch (error) {
-        console.error('MongoDB உடன் இணைக்க முடியவில்லை:', error);
-        process.exit(1); // தரவுத்தளத்துடன் இணைக்க முடியாவிட்டால் செயல்முறையை வெளியேறவும்
+        console.error('Failed to connect to MongoDB:', error);
+        process.exit(1); // Exit process if unable to connect to the database
     }
 }
 
-// சர்வர் தொடங்கும் போது MongoDB உடன் இணைக்கவும்
+// Connect to MongoDB when the server starts
 connectToMongoDB();
 
-// --- மிடில்வேர் (Middleware) ---
-app.use(express.json()); // JSON கோரிக்கை உடல்களைப் பார்ஸ் செய்ய
-app.use(cors()); // CORS கொள்கைகளை அனுமதிக்க (முன்பக்க அப்ளிகேஷனில் இருந்து கோரிக்கைகளை அனுமதிக்க)
+// --- Middleware ---
+app.use(express.json()); // To parse JSON request bodies
+app.use(cors()); // To allow CORS policies (allow requests from frontend application)
 
-// --- API ரூட்டுகள் ---
+// --- API Routes ---
 
-// அனைத்து தயாரிப்புகளையும் MongoDB இலிருந்து பெற GET கோரிக்கை
+// GET request to fetch all products from MongoDB
 // URL: /api/products
 app.get('/api/products', async (req, res) => {
-    console.log('GET /api/products கோரிக்கை பெறப்பட்டது.');
+    console.log('GET /api/products request received.');
     try {
         const productsCollection = db.collection(COLLECTION_NAME);
-        const products = await productsCollection.find({}).toArray(); // அனைத்து தயாரிப்புகளையும் பெறவும்
+        const products = await productsCollection.find({}).toArray(); // Retrieve all products
         res.json(products);
     } catch (error) {
-        console.error('தயாரிப்புகளைப் பெறுவதில் பிழை:', error);
-        res.status(500).json({ message: 'தரவுத்தளத்திலிருந்து தயாரிப்புகளைப் பெற முடியவில்லை.' });
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: 'Failed to retrieve products from the database.' });
     }
 });
 
-// MongoDB இல் புதிய தயாரிப்பைச் சேர்க்க POST கோரிக்கை
+// POST request to add a new product to MongoDB
 // URL: /api/products
 app.post('/api/products', async (req, res) => {
-    console.log('POST /api/products கோரிக்கை பெறப்பட்டது. உடல் (Body):', req.body);
+    console.log('POST /api/products request received. Body:', req.body);
     const { name, price, image, description, category } = req.body;
 
-    // தேவையான புலங்கள் உள்ளதா என சரிபார்க்கவும்
+    // Validate required fields
     if (!name || !price || !description || !category) {
-        return res.status(400).json({ message: 'தயாரிப்பு பெயர், விலை, விளக்கம் மற்றும் வகை அவசியம்.' });
+        return res.status(400).json({ message: 'Product name, price, description, and category are required.' });
     }
 
     try {
         const productsCollection = db.collection(COLLECTION_NAME);
         const newProduct = { name, price, image, description, category, createdAt: new Date() };
-        const result = await productsCollection.insertOne(newProduct); // புதிய தயாரிப்பை செருகவும்
-        console.log('புதிய தயாரிப்பு சேர்க்கப்பட்டது:', result.insertedId);
-        // MongoDB தானாகவே _id புலத்தைச் சேர்க்கிறது, அதை நாம் திருப்பி அனுப்புகிறோம்
+        const result = await productsCollection.insertOne(newProduct); // Insert the new product
+        console.log('New product added:', result.insertedId);
+        // MongoDB automatically adds an _id field, which we return
         res.status(201).json({ id: result.insertedId, ...newProduct });
     } catch (error) {
-        console.error('தயாரிப்பைச் சேர்ப்பதில் பிழை:', error);
-        res.status(500).json({ message: 'தரவுத்தளத்தில் தயாரிப்பைச் சேர்க்க முடியவில்லை.' });
+        console.error('Error adding product:', error);
+        res.status(500).json({ message: 'Failed to add product to the database.' });
     }
 });
 
-// MongoDB இல் ID மூலம் ஒரு குறிப்பிட்ட தயாரிப்பைப் புதுப்பிக்க PUT கோரிக்கை
-// URL: /api/products/:id (உதாரணம்: /api/products/60d5ec49f8c1b2001c8c4567)
+// PUT request to update a specific product by ID in MongoDB
+// URL: /api/products/:id (Example: /api/products/60d5ec49f8c1b2001c8c4567)
 app.put('/api/products/:id', async (req, res) => {
     const productId = req.params.id;
     const { name, price, image, description, category } = req.body;
-    console.log(`PUT /api/products/${productId} கோரிக்கை பெறப்பட்டது. உடல் (Body):`, req.body);
+    console.log(`PUT /api/products/${productId} request received. Body:`, req.body);
 
-    // ID ஒரு செல்லுபடியாகும் MongoDB ObjectId வடிவத்தில் உள்ளதா என சரிபார்க்கவும்
+    // Validate if the ID is a valid MongoDB ObjectId format
     if (!ObjectId.isValid(productId)) {
-        return res.status(400).json({ message: 'தயாரிப்பு ID வடிவம் செல்லுபடியாகவில்லை.' });
+        return res.status(400).json({ message: 'Product ID format is invalid.' });
     }
 
     try {
@@ -110,53 +107,53 @@ app.put('/api/products/:id', async (req, res) => {
             }
         };
         const result = await productsCollection.updateOne(
-            { _id: new ObjectId(productId) }, // ObjectId மூலம் வினவவும்
+            { _id: new ObjectId(productId) }, // Query by ObjectId
             updateDoc
         );
 
         if (result.matchedCount === 0) {
-            return res.status(404).json({ message: 'தயாரிப்பு காணப்படவில்லை.' });
+            return res.status(404).json({ message: 'Product not found.' });
         }
-        // புதுப்பிக்கப்பட்ட ஆவணத்தைப் பெற்று திருப்பி அனுப்பவும்
+        // Retrieve and return the updated document
         const updatedProduct = await productsCollection.findOne({ _id: new ObjectId(productId) });
-        console.log('தயாரிப்பு புதுப்பிக்கப்பட்டது:', updatedProduct);
+        console.log('Product updated:', updatedProduct);
         res.json({ id: updatedProduct._id, ...updatedProduct });
     } catch (error) {
-        console.error('தயாரிப்பைப் புதுப்பிப்பதில் பிழை:', error);
-        res.status(500).json({ message: 'தரவுத்தளத்தில் தயாரிப்பைப் புதுப்பிக்க முடியவில்லை.' });
+        console.error('Error updating product:', error);
+        res.status(500).json({ message: 'Failed to update product in the database.' });
     }
 });
 
-// MongoDB இலிருந்து ID மூலம் ஒரு குறிப்பிட்ட தயாரிப்பை நீக்க DELETE கோரிக்கை
-// URL: /api/products/:id (உதாரணம்: /api/products/60d5ec49f8c1b2001c8c4567)
+// DELETE request to delete a specific product by ID from MongoDB
+// URL: /api/products/:id (Example: /api/products/60d5ec49f8c1b2001c8c4567)
 app.delete('/api/products/:id', async (req, res) => {
     const productId = req.params.id;
-    console.log(`DELETE /api/products/${productId} கோரிக்கை பெறப்பட்டது.`);
+    console.log(`DELETE /api/products/${productId} request received.`);
 
-    // ID ஒரு செல்லுபடியாகும் MongoDB ObjectId வடிவத்தில் உள்ளதா என சரிபார்க்கவும்
+    // Validate if the ID is a valid MongoDB ObjectId format
     if (!ObjectId.isValid(productId)) {
-        return res.status(400).json({ message: 'தயாரிப்பு ID வடிவம் செல்லுபடியாகவில்லை.' });
+        return res.status(400).json({ message: 'Product ID format is invalid.' });
     }
 
     try {
         const productsCollection = db.collection(COLLECTION_NAME);
-        const result = await productsCollection.deleteOne({ _id: new ObjectId(productId) }); // ObjectId மூலம் நீக்கவும்
+        const result = await productsCollection.deleteOne({ _id: new ObjectId(productId) }); // Delete by ObjectId
 
         if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'தயாரிப்பு காணப்படவில்லை.' });
+            return res.status(404).json({ message: 'Product not found.' });
         }
-        console.log('தயாரிப்பு நீக்கப்பட்டது:', productId);
-        res.status(204).send(); // வெற்றிகரமான நீக்கத்திற்கு 204 No Content
+        console.log('Product deleted:', productId);
+        res.status(204).send(); // 204 No Content for successful deletion
     } catch (error) {
-        console.error('தயாரிப்பை நீக்குவதில் பிழை:', error);
-        res.status(500).json({ message: 'தரவுத்தளத்திலிருந்து தயாரிப்பை நீக்க முடியவில்லை.' });
+        console.error('Error deleting product:', error);
+        res.status(500).json({ message: 'Failed to delete product from the database.' });
     }
 });
 
-// சர்வரைத் தொடங்கவும்
+// Start the server
 app.listen(PORT, () => {
-    console.log(`சர்வர் http://localhost:${PORT} இல் இயங்குகிறது.`);
-    console.log('API எண்ட்பாயிண்ட்கள்:');
+    console.log(`Server running at http://localhost:${PORT}.`);
+    console.log('API Endpoints:');
     console.log(`  GET    /api/products`);
     console.log(`  POST   /api/products`);
     console.log(`  PUT    /api/products/:id`);
