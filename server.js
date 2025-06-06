@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3001; // Port for the server to run on (3001 or
 // that can occur with 'mongodb+srv://' in some deployment environments (like Render.com).
 // Ensure to replace 'Tamizh@4596' with your actual database user password.
 // The correct cluster address is 'tharshan.ix4qfl9.mongodb.net'.
-const MONGODB_URI = 'mongodb://Tamizh:Tamizh@4596@tharshan-shard-00-00.ix4qfl9.mongodb.net:27017,tharshan-shard-00-01.ix4qfl9.mongodb.net:27017,tharshan-shard-00-02.ix4qfl9.mongodb.net:27017/bigbasket_clone?authSource=admin&replicaSet=THARSHAN-shard-0';
+const MONGODB_URI = 'mongodb://Tamizh:Tamizh%404596@tharshan-shard-00-00.ix4qfl9.mongodb.net:27017,tharshan-shard-00-01.ix4qfl9.mongodb.net:27017,tharshan-shard-00-02.ix4qfl9.mongodb.net:27017/bigbasket_clone?authSource=admin&replicaSet=THARSHAN-shard-0'
 const DB_NAME = 'bigbasket_clone'; // Name of your database
 const COLLECTION_NAME = 'products'; // Name of your collection for products
 
